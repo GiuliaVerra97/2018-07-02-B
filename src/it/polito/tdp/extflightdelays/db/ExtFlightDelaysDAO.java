@@ -7,10 +7,12 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import it.polito.tdp.extflightdelays.model.Airline;
 import it.polito.tdp.extflightdelays.model.Airport;
 import it.polito.tdp.extflightdelays.model.Flight;
+import it.polito.tdp.extflightdelays.model.Rotta;
 
 public class ExtFlightDelaysDAO {
 
@@ -90,5 +92,68 @@ public class ExtFlightDelaysDAO {
 			System.out.println("Errore connessione al database");
 			throw new RuntimeException("Error Connection Database");
 		}
+	}
+
+	public int getAereoporti(int a) {
+		String sql = "SELECT COUNT(f1.ID) as conta " + 
+				"FROM airports AS a, flights AS f1 " + 
+				"WHERE (a.ID=f1.ORIGIN_AIRPORT_ID AND a.ID=?) OR (a.ID=f1.DESTINATION_AIRPORT_ID AND a.ID=?)";
+
+		try {
+			Connection conn = ConnectDB.getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+			st.setInt(1, a);
+			st.setInt(2, a);
+
+			ResultSet rs = st.executeQuery();
+			int conta=0;
+			if(rs.next()) {
+				conta=rs.getInt("conta");
+			}
+
+			conn.close();
+			return conta;
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+			System.out.println("Errore connessione al database");
+			throw new RuntimeException("Error Connection Database");
+		}
+	}
+
+	public List<Rotta> getRotte(Map<Integer, Airport> mappaAereoporti) {
+			String sql = "SELECT ORIGIN_AIRPORT_ID, DESTINATION_AIRPORT_ID, AVG(ELAPSED_TIME) AS durata " + 
+					"FROM flights " + 
+					"GROUP BY ORIGIN_AIRPORT_ID, DESTINATION_AIRPORT_ID";
+			List<Rotta> result = new ArrayList<Rotta>();
+
+			try {
+				Connection conn = ConnectDB.getConnection();
+				PreparedStatement st = conn.prepareStatement(sql);
+				ResultSet rs = st.executeQuery();
+
+				while (rs.next()) {
+					
+					if(mappaAereoporti.containsKey(rs.getInt("ORIGIN_AIRPORT_ID")) && mappaAereoporti.containsKey(rs.getInt("DESTINATION_AIRPORT_ID"))) {
+						Airport a1=mappaAereoporti.get(rs.getInt("ORIGIN_AIRPORT_ID"));
+						Airport a2=mappaAereoporti.get(rs.getInt("DESTINATION_AIRPORT_ID"));
+						Rotta rotta=new Rotta(a1.getId(), a2.getId(), rs.getDouble("durata"));
+						result.add(rotta);
+
+					}else {
+						
+					}
+					
+			
+				}
+
+				conn.close();
+				return result;
+
+			} catch (SQLException e) {
+				e.printStackTrace();
+				System.out.println("Errore connessione al database");
+				throw new RuntimeException("Error Connection Database");
+			}
 	}
 }

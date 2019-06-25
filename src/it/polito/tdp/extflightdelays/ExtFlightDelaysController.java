@@ -7,7 +7,9 @@ package it.polito.tdp.extflightdelays;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import it.polito.tdp.extflightdelays.model.Airport;
 import it.polito.tdp.extflightdelays.model.Model;
+import it.polito.tdp.extflightdelays.model.Ordina;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -35,7 +37,7 @@ public class ExtFlightDelaysController {
     private Button btnAnalizza; // Value injected by FXMLLoader
 
     @FXML // fx:id="cmbBoxAeroportoPartenza"
-    private ComboBox<?> cmbBoxAeroportoPartenza; // Value injected by FXMLLoader
+    private ComboBox<Airport> cmbBoxAeroportoPartenza; // Value injected by FXMLLoader
 
     @FXML // fx:id="btnAeroportiConnessi"
     private Button btnAeroportiConnessi; // Value injected by FXMLLoader
@@ -48,12 +50,42 @@ public class ExtFlightDelaysController {
 
     @FXML
     void doAnalizzaAeroporti(ActionEvent event) {
+    	
+    	if(voliMinimo.getText()==null){
+    		txtResult.appendText("iserire voli minimi\n");
+    		return;
+    	}else {
+    		
+    		int num=Integer.parseInt(voliMinimo.getText());
+    		model.creaGrafo(num);
+    		txtResult.appendText("Grafo Creato con "+model.getGrafo().vertexSet().size()+"vertici e"+model.getGrafo().edgeSet().size()+" archi \n");
+    		try {
+    			
+    		}catch(NumberFormatException e) {
+    			txtResult.appendText("errore, inserire intero\n");
+    		}
+    		
+    	}
+    	
+    	cmbBoxAeroportoPartenza.getItems().addAll(model.getAereoporti());
+    	
+    	
 
     }
 
     @FXML
     void doCalcolaAeroportiConnessi(ActionEvent event) {
+    	
+    		if(cmbBoxAeroportoPartenza.getValue()==null) {
+    			txtResult.setText("Scegliere aereoporto di partenza");
+    			return;
+    		}
 
+    		Airport a=cmbBoxAeroportoPartenza.getValue();
+    		for(Ordina o: model.elencoConnessi(a)) {
+    			txtResult.appendText(o.getA()+" "+o.getDurata()+"\n");
+    		}
+    		
     }
 
     @FXML
